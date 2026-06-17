@@ -178,3 +178,26 @@ docs/ENTREGA_ACADEMICA.md
 ```
 
 Ele contém a descrição do problema, arquitetura, microsserviços, SOLID, padrões, TDD, BDD, Docker, deploy e justificativa técnica.
+
+## Execução com microsserviços
+
+A versão atual também possui divisão em microsserviços pelo `docker-compose.yml`:
+
+- `pedido-service`: aplicação Django principal, disponível em `http://localhost:8000`.
+- `cliente-service`: API FastAPI de clientes, disponível em `http://localhost:8001/health`.
+- `notificacao-service`: API FastAPI de notificações, disponível em `http://localhost:8002/health`.
+
+Para executar tudo:
+
+```bash
+docker compose up --build
+```
+
+Para rodar os testes dentro do serviço principal:
+
+```bash
+docker compose exec pedido-service pytest
+docker compose exec pedido-service behave
+```
+
+O deploy no Render pode continuar usando o `Dockerfile` da raiz para publicar o serviço principal Django.

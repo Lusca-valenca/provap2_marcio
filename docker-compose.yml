@@ -1,7 +1,7 @@
 services:
-  web:
+  pedido-service:
     build: .
-    container_name: django-shop-web
+    container_name: django-shop-pedido-service
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
@@ -11,3 +11,20 @@ services:
       DEBUG: "1"
       SECRET_KEY: "dev-secret-key"
       ALLOWED_HOSTS: "*"
+      CLIENTE_SERVICE_URL: "http://cliente-service:8001"
+      NOTIFICACAO_SERVICE_URL: "http://notificacao-service:8002"
+    depends_on:
+      - cliente-service
+      - notificacao-service
+
+  cliente-service:
+    build: ./microservices/cliente_service
+    container_name: django-shop-cliente-service
+    ports:
+      - "8001:8001"
+
+  notificacao-service:
+    build: ./microservices/notificacao_service
+    container_name: django-shop-notificacao-service
+    ports:
+      - "8002:8002"

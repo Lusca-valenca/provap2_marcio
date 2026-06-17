@@ -1,4 +1,4 @@
-# Entrega acadêmica — Django Shop
+# — Django Shop
 
 ## 1. Descrição do problema escolhido
 O projeto resolve o problema de gerenciamento de pedidos em um e-commerce simples. A aplicação permite cadastrar clientes, produtos, criar pedidos, calcular frete, processar pagamento simulado e acompanhar mudanças de status do pedido.
@@ -127,3 +127,39 @@ Não foi possível publicar automaticamente porque isso exige acesso à conta do
 
 ## 12. Justificativa técnica das escolhas
 Django foi mantido por já existir no projeto e por entregar rapidamente autenticação, ORM, rotas, templates e painel administrativo. A Arquitetura Limpa foi aplicada para reduzir acoplamento e facilitar testes. Docker foi escolhido para padronizar o ambiente. Render/Railway foram sugeridos por serem simples para publicar aplicações acadêmicas com Python. O monólito modular foi escolhido como etapa inicial, pois é mais fácil de demonstrar e mantém separação lógica de microsserviços sem adicionar complexidade operacional desnecessária.
+
+## Complemento: Divisão real em microsserviços
+
+Após a primeira organização como monólito modular, a solução foi adaptada para demonstrar uma divisão real em microsserviços usando Docker Compose. A aplicação principal Django passa a representar o **pedido-service**, responsável pela interface web, cadastro e alteração de pedidos. Além dele, foram adicionados dois serviços independentes em FastAPI:
+
+| Serviço | Tecnologia | Porta | Responsabilidade |
+|---|---|---:|---|
+| pedido-service | Django | 8000 | Interface web, cadastro, consulta e atualização de pedidos |
+| cliente-service | FastAPI | 8001 | Consulta e centralização de dados de clientes |
+| notificacao-service | FastAPI | 8002 | Registro/envio simulado de notificações de pedidos |
+
+Essa divisão foi escolhida porque cada serviço possui uma responsabilidade específica, respeitando o princípio da responsabilidade única. O serviço de pedidos não precisa conhecer detalhes internos do cadastro de clientes nem do envio de notificações, comunicando-se por HTTP através de classes clientes localizadas na camada de infraestrutura.
+
+### Comunicação entre os serviços
+
+A comunicação entre os microsserviços ocorre via REST/HTTP dentro da rede criada pelo Docker Compose:
+
+- `pedido-service` chama `cliente-service` usando `CLIENTE_SERVICE_URL=http://cliente-service:8001`.
+- `pedido-service` chama `notificacao-service` usando `NOTIFICACAO_SERVICE_URL=http://notificacao-service:8002`.
+- Cada microsserviço possui seu próprio `Dockerfile` e pode ser executado de forma independente.
+
+### Como executar os microsserviços
+
+```bash
+docker compose up --build
+```
+
+Após a subida dos containers, os serviços ficam disponíveis em:
+
+- Aplicação principal: `http://localhost:8000`
+- Cliente Service: `http://localhost:8001/health`
+- Notificação Service: `http://localhost:8002/health`
+
+### Justificativa técnica da adaptação
+
+A separação em microsserviços foi adotada para aumentar a modularidade, reduzir acoplamento e permitir evolução independente das partes do sistema. O Django foi mantido no serviço principal por já conter a interface e as regras de pedido, enquanto FastAPI foi utilizado nos serviços auxiliares por ser leve, simples e adequado para APIs REST. O Docker Compose permite subir todos os serviços de forma padronizada, demonstrando um ambiente distribuído mesmo em máquina local.

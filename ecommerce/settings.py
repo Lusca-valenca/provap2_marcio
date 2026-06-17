@@ -6,8 +6,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-projeto-padroes-design-patterns-2024")
 DEBUG = config("DEBUG", default=True, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*", cast=Csv())
-CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS",default="https://*.onrender.com",cast=Csv()
-)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
