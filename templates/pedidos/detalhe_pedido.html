@@ -1,0 +1,127 @@
+{% extends "pedidos/base.html" %}
+{% block title %}Pedido #{{ pedido.pk }}{% endblock %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+  <div>
+    <h2>🧾 Pedido #{{ pedido.pk }}</h2>
+    <p style="color: var(--muted); font-size:0.9rem; margin-top:0.3rem;">
+      {{ pedido.criado_em|date:"d/m/Y H:i" }} · {{ pedido.cliente.nome }}
+    </p>
+  </div>
+  <span class="badge badge-{{ pedido.status }}" style="font-size:0.95rem; padding: 0.4rem 1rem;">
+    {{ pedido.get_status_display }}
+  </span>
+</div>
+
+<div class="grid-2">
+  <div>
+    <!-- Resumo financeiro -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">💰 Resumo Financeiro</span>
+        <span class="pattern-tag tag-facade">Facade</span>
+      </div>
+      <table>
+        <tr><td style="color: var(--muted);">Subtotal</td><td style="text-align:right;">R$ {{ pedido.subtotal }}</td></tr>
+        <tr><td style="color: var(--muted);">Frete ({{ pedido.get_opcao_frete_display }})</td><td style="text-align:right;">R$ {{ pedido.valor_frete }}</td></tr>
+        <tr><td style="color: var(--muted);">Taxa de serviço (5%)</td><td style="text-align:right;">R$ {{ pedido.taxa_servico }}</td></tr>
+        <tr>
+          <td style="font-weight:700; color: var(--accent2);">Total</td>
+          <td style="text-align:right; font-weight:700; color: var(--accent2); font-size:1.1rem;">R$ {{ pedido.total }}</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Itens -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">📦 Itens do Pedido</span></div>
+      <table>
+        <thead><tr><th>Produto</th><th>Qtd</th><th>Unitário</th><th>Subtotal</th></tr></thead>
+        <tbody>
+          {% for item in pedido.itens.all %}
+          <tr>
+            <td>{{ item.produto.nome }}</td>
+            <td>{{ item.quantidade }}</td>
+            <td>R$ {{ item.preco_unitario }}</td>
+            <td>R$ {{ item.subtotal }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagamento -->
+    {% if pedido.resultado_pagamento %}
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">💳 Dados do Pagamento</span>
+        <span class="pattern-tag tag-factory">Factory Method</span>
+      </div>
+      {% for k, v in pedido.resultado_pagamento.items %}
+      <div style="display:flex; justify-content:space-between; padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.875rem;">
+        <span style="color: var(--muted);">{{ k }}</span>
+        <span>{{ v }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <!-- Atualizar status -->
+    {% if proximo_status and pedido.status != "cancelado" and pedido.status != "entregue" %}
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🔄 Atualizar Status</span>
+        <span class="pattern-tag tag-observer">Observer</span>
+      </div>
+      <p style="color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem;">
+        Ao atualizar, o padrão <strong>Observer</strong> notificará automaticamente:
+        NotificadorEmail, NotificadorEstoque e NotificadorAdministrador.
+      </p>
+      <form method="post" action="{% url 'atualizar_status' pedido.pk %}" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        {% csrf_token %}
+        <input type="hidden" name="novo_status" value="{{ proximo_status }}">
+        <button type="submit" class="btn btn-success">
+          ➡️ Avançar para "{{ proximo_status|title }}"
+        </button>
+        <input type="hidden" name="novo_status" value="cancelado">
+      </form>
+      <form method="post" action="{% url 'atualizar_status' pedido.pk %}" style="margin-top: 0.5rem;">
+        {% csrf_token %}
+        <input type="hidden" name="novo_status" value="cancelado">
+        <button type="submit" class="btn btn-danger btn-sm">❌ Cancelar Pedido</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Histórico de status -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📋 Histórico de Status</span>
+        <span class="pattern-tag tag-observer">Observer</span>
+      </div>
+      <div class="timeline">
+        {% for h in pedido.historico.all %}
+        <div class="timeline-item">
+          <div style="font-size: 0.85rem; font-weight: 600;">
+            <span class="badge badge-{{ h.status_anterior }}">{{ h.status_anterior }}</span>
+            →
+            <span class="badge badge-{{ h.status_novo }}">{{ h.status_novo }}</span>
+          </div>
+          {% if h.observacao %}
+          <div style="color: var(--muted); font-size: 0.8rem; margin-top: 0.25rem;">{{ h.observacao }}</div>
+          {% endif %}
+          <div style="color: var(--muted); font-size: 0.75rem; margin-top: 0.25rem;">{{ h.criado_em|date:"d/m/Y H:i" }}</div>
+        </div>
+        {% empty %}
+        <p style="color: var(--muted); font-size: 0.85rem;">Nenhum histórico.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<a href="{% url 'home' %}" class="btn btn-outline">← Voltar</a>
+{% endblock %}

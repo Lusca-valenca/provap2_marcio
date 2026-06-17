@@ -1,0 +1,111 @@
+{% extends "pedidos/base.html" %}
+{% block title %}Novo Pedido{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: 1.5rem;">
+  <h2>🛍️ Criar Novo Pedido</h2>
+  <p style="color: var(--muted); margin-top: 0.4rem; font-size: 0.9rem;">
+    Ao confirmar, a <span class="pattern-tag tag-facade">Facade</span> orquestra
+    <span class="pattern-tag tag-factory">Factory</span>
+    <span class="pattern-tag tag-strategy">Strategy</span>
+    <span class="pattern-tag tag-singleton">Singleton</span>
+    <span class="pattern-tag tag-observer">Observer</span> automaticamente.
+  </p>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">👤 Cliente</span></div>
+        <div class="form-group">
+          <label>Selecionar Cliente</label>
+          <select name="cliente_id" required>
+            <option value="">— Selecione —</option>
+            {% for c in clientes %}
+            <option value="{{ c.pk }}">{{ c.nome }} ({{ c.email }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% if not clientes %}
+        <p style="color: var(--danger); font-size: 0.85rem;">
+          Nenhum cliente cadastrado. <a href="/admin/pedidos/cliente/add/">Adicionar no Admin</a>
+        </p>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🚚 Frete</span>
+          <span class="pattern-tag tag-strategy">Strategy</span>
+        </div>
+        <div class="form-group">
+          <label>Opção de Frete</label>
+          <select name="opcao_frete" required>
+            <option value="pac">PAC — Correios (econômico, ~R$ 8-12)</option>
+            <option value="sedex">SEDEX — Correios (expresso, ~R$ 18-26)</option>
+            <option value="retirada">Retirada na Loja (grátis)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>CEP de Destino</label>
+          <input type="text" name="cep_destino" placeholder="00000-000" value="22041-001">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">💳 Pagamento</span>
+          <span class="pattern-tag tag-factory">Factory Method</span>
+        </div>
+        <div class="form-group">
+          <label>Método de Pagamento</label>
+          <select name="metodo_pagamento" required>
+            <option value="pix">PIX (5% de desconto)</option>
+            <option value="cartao">Cartão de Crédito</option>
+            <option value="boleto">Boleto Bancário</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Parcelas (apenas cartão)</label>
+          <select name="parcelas">
+            {% for i in "12345678910"|make_list %}
+            <option value="{{ forloop.counter }}">{{ forloop.counter }}x</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">📦 Produtos</span></div>
+        {% for produto in produtos %}
+        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+          <input type="hidden" name="produto_id" value="{{ produto.pk }}">
+          <div style="flex: 1;">
+            <div style="font-weight: 500;">{{ produto.nome }}</div>
+            <div style="font-size: 0.8rem; color: var(--muted);">R$ {{ produto.preco }} · Estoque: {{ produto.estoque }}</div>
+          </div>
+          <div style="width: 80px;">
+            <input type="number" name="quantidade" value="0" min="0" max="{{ produto.estoque }}" style="text-align: center;">
+          </div>
+        </div>
+        {% empty %}
+        <p style="color: var(--muted);">Nenhum produto. <a href="/admin/pedidos/produto/add/">Adicionar no Admin</a></p>
+        {% endfor %}
+
+        <div style="margin-top: 1rem; padding: 0.75rem; background: var(--surface); border-radius: 8px; font-size: 0.85rem; color: var(--muted);">
+          <span class="pattern-tag tag-singleton">Singleton</span>
+          Taxa de serviço de 5% será aplicada automaticamente. Frete grátis para pedidos acima de R$ 200.
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+        ✅ Processar Pedido via FachadaPedido
+      </button>
+    </div>
+  </div>
+</form>
+{% endblock %}
